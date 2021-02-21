@@ -1,0 +1,17 @@
+On a filled OS related disk (Windows/Linux)
+
+On a disk that already contains a Windows 10 system in working order  there are a few steps needed to install OpenCore and MacOs with Window so they be selectable at boot:
+
+The first thing to do beforehand is to get the Windows UUID; it will be used to fill the SMUUID field in the PlatformInfo directory in config.plist. To get this info, boot into Windows, run the command prompt (Windows equivalent of terminal) with administrator privilege and type : "wmic path win32_computersystemproduct get uuid". The result will be like : 4D4D1234-1234-1234-1234-A1B23C456789.
+
+This resuting UUID will be used to configure the PlatformInfo fields of the config.plist along with the model information you chose for your system: this is to be put in your config.plist - PlatformInfo - SMUUID field. If the value in this field differ from the Windows UUID, Windows won’t boot ! It would simply try to enter repair mode and then will show a blue screen with an error message stating: error 0xc00000d. Error code 0xc000000d is a Windows error that appears when the system cannot boot to Windows due to messy PC boot configuration. The error message appears in a Blue screen display with the message Your PC needs to be repaired. Since OpenCore is loaded prior to any operating systems the values put in config.plist affect all os’s. And Windows is fussy with the UUID because the BCD file used to boot have this information encoded into it, and it’s not editable; you can only rebuild it.
+
+Then you have to make space for a partition to install MacOs. It can be done via Disk Management in Windows (diskmgmt.msc) or  by booting with GParted  on a USB Thumbdrive. In each case the objective is to resize the existing partition … don’t forget to backup your data before doing so … usually it’s a smooth but long process, but it may go wrong if you’re not ready.
+
+Once it is done you can leave the space empty and boot with the MacOs installer, and use Disk Utility to create a partition in the empty space and then format it to APFS file system. With GParted you can create the partition and format it to HFS+ Journaled. After the partitioning and formatting is done the MacOs Installer will see it as an available space to install. Once the installation is completed, you have to transfer the OpenCore directory (EFI\OC) in the EFI directory of the ESP (efi) partition of your disk; it can be done via the uefi shell of OpenCore. The ESP partition where you will copy the OC directory already have a BOOT (EFI\BOOT) and Microsoft (EFI\Microsoft) directory; these are to be left as is.
+
+Last thing to do is reboot, reset the NVRAM, reboot again and set your bios to boot from OpenCore.efi, or else you copy BOOTx64.efi from OpenCore (EFI\BOOT) to the EFI\BOOT directory of your disk. Never forget to reset the NVRAM each time you make a modification. 
+
+If Windows still refuse to boot and your UUID’s are identical, then it’s a problem of SSDT’s (EFI\OC|ACPI). But usually Windows is relatively tolerant to modified SSDT’s and renaming. EC renaming and OSI renaming are known to work.
+
+Then you`re set to enjoy Windows or MacOs from the OpenCore bootloader. 
